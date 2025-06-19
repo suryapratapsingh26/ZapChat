@@ -7,7 +7,7 @@ import path from "path";
 import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
-import { app, server } from "./lib/socket.js";
+import { app, server } from "./lib/socket.js"; // Assuming 'app' and 'server' are exported from socket.js
 
 dotenv.config();
 
@@ -25,6 +25,13 @@ app.use(
     credentials: true,
   })
 );
+
+// ADD THIS MIDDLEWARE TO LOG ALL INCOMING REQUESTS
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] Incoming Request: ${req.method} ${req.originalUrl} - Body:`, req.body);
+  next();
+});
+// END OF ADDED MIDDLEWARE
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
