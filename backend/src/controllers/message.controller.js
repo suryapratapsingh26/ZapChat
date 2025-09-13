@@ -3,7 +3,9 @@ import Message from "../models/message.model.js";
 
 import cloudinary from "../lib/cloudinary.js";
 import { getReceiverSocketId, io } from "../lib/socket.js";
+import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
 
+// Get users for the sidebar
 export const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
@@ -16,6 +18,8 @@ export const getUsersForSidebar = async (req, res) => {
   }
 };
 
+ 
+// Get messages
 export const getMessages = async (req, res) => {
   try {
     const { id: userToChatId } = req.params;
@@ -35,6 +39,8 @@ export const getMessages = async (req, res) => {
   }
 };
 
+ 
+// Send message
 export const sendMessage = async (req, res) => {
   try {
     const { text, image } = req.body;
@@ -43,9 +49,16 @@ export const sendMessage = async (req, res) => {
 
     let imageUrl;
     if (image) {
-      // Upload base64 image to cloudinary
-      const uploadResponse = await cloudinary.uploader.upload(image);
-      imageUrl = uploadResponse.secure_url;
+      // Upload base64 image to cloudinary using a worker thread
+      imageUrl = await new Promise((resolve, reject) => {
+        // Assuming your worker file is in 'src/lib/cloudinaryWorker.js'
+        const worker = new Worker("./src/lib/cloudinaryWorker.js", { workerData: image });
+        worker.on("message", resolve);
+        worker.on("error", reject);
+        worker.on("exit", (code) => {
+          if (code !== 0) reject(new Error(`Worker stopped with exit code ${code}`));
+        });
+      });
     }
 
     const newMessage = new Message({
