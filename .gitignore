@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .env
+
+# Continue AI assistant configuration
+.continue/
