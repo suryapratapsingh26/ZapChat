@@ -109,26 +109,34 @@ export const verifyOtp = async (req, res) => {
 // Send Password Reset OTP
 export const sendPasswordResetOtp = async (req, res) => {
 	try {
+		console.log("Entering sendPasswordResetOtp controller.");
 		const { email } = req.body;
+		console.log("Email received for password reset:", email);
 		const user = await User.findOne({ email });
 
 		if (!user) {
 			// To prevent user enumeration, we send a success response even if the user doesn't exist.
+			console.log("No user found for this email. Sending generic success response.");
 			return res.json({ message: "If a user with this email exists, an OTP has been sent." });
 		}
 
+		console.log("User found. Generating OTP for password reset.");
 		const otp = generateOTP();
 		const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+		console.log("Generated OTP:", otp);
 
 		// Use findByIdAndUpdate to avoid triggering the pre-save password hash hook
 		await User.findByIdAndUpdate(user._id, {
 			otp,
 			otpExpires,
 		});
+		console.log("User updated in DB with new OTP.");
 
 		await sendOTPEmail(email, otp);
+		console.log("Password reset OTP email send attempt initiated.");
 
 		res.json({ message: "OTP sent successfully" });
+		console.log("sendPasswordResetOtp controller finished successfully.");
 	} catch (error) {
 		console.log("Error in sendPasswordResetOtp controller:", error.message);
 		res.status(500).json({ error: "Failed to send OTP" });
