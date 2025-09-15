@@ -14,6 +14,9 @@ dotenv.config();
 const PORT = process.env.PORT;
 const __dirname = path.resolve();
 
+// Trust the first proxy
+app.set("trust proxy", 1);
+
 // Increase payload size limit
 app.use(express.json({ limit: "10mb" })); // For JSON payloads
 app.use(express.urlencoded({ limit: "10mb", extended: true })); // For URL-encoded data
