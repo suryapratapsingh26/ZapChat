@@ -98,7 +98,7 @@ export const verifyOtp = async (req, res) => {
 			{ new: true }
 		);
 		console.log("Email verified successfully for:", email);
-
+                              
 		res.json({ message: "Email verified successfully" });
 	} catch (error) {
 		console.log("Error in verifyOtp controller (catch block):", error.message);
