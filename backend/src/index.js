@@ -3,11 +3,17 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import path from "path";
+import http from "http";
 
 import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
-import { app, server } from "./lib/socket.js"; // Assuming 'app' and 'server' are exported from socket.js
+import { initializeSocket } from "./lib/socket.js";
+
+const app = express();
+const server = http.createServer(app);
+// Initialize socket.io and pass the server instance
+initializeSocket(server);
 
 dotenv.config();
 
