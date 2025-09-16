@@ -1,8 +1,7 @@
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
-import cloudinary from "../lib/cloudinary.js";
 import { getReceiverSocketId, getIo } from "../lib/socket.js";
-import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
+import { uploadImage } from "../lib/imageUploader.js";
 
 // Get users for the sidebar
 export const getUsersForSidebar = async (req, res) => {
@@ -48,16 +47,7 @@ export const sendMessage = async (req, res) => {
 
     let imageUrl;
     if (image) {
-      // Upload base64 image to cloudinary using a worker thread
-      imageUrl = await new Promise((resolve, reject) => {
-        // Assuming your worker file is in 'src/lib/cloudinaryWorker.js'
-        const worker = new Worker("./src/lib/cloudinaryWorker.js", { workerData: image });
-        worker.on("message", resolve);
-        worker.on("error", reject);
-        worker.on("exit", (code) => {
-          if (code !== 0) reject(new Error(`Worker stopped with exit code ${code}`));
-        });
-      });
+      imageUrl = await uploadImage(image);
     }
 
     const newMessage = new Message({
