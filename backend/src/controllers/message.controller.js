@@ -1,8 +1,7 @@
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
-
 import cloudinary from "../lib/cloudinary.js";
-import { getReceiverSocketId, io } from "../lib/socket.js";
+import { getReceiverSocketId, getIo } from "../lib/socket.js";
 import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
 
 // Get users for the sidebar
@@ -72,6 +71,7 @@ export const sendMessage = async (req, res) => {
 
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
+      const io = getIo();
       io.to(receiverSocketId).emit("newMessage", newMessage);
     }
 

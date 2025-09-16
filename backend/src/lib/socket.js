@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 
+let io;
 // used to store online users
 const userSocketMap = {}; // {userId: socketId}
 
@@ -8,7 +9,7 @@ export const getReceiverSocketId = (userId) => {
 };
 
 export const initializeSocket = (server) => {
-	const io = new Server(server, {
+	io = new Server(server, {
 		cors: {
 			origin: ["http://localhost:5173", "https://zap-chat-pheh.onrender.com"],
 		},
@@ -25,14 +26,20 @@ export const initializeSocket = (server) => {
 
 		socket.on("disconnect", () => {
 			console.log("A user disconnected", socket.id);
-			// Find which userId was associated with this socket.id
-			const disconnectedUserId = Object.keys(userSocketMap).find(
-				(key) => userSocketMap[key] === socket.id
-			);
-			if (disconnectedUserId) delete userSocketMap[disconnectedUserId];
-			io.emit("getOnlineUsers", Object.keys(userSocketMap)); // Emit updated list
+			if (userId) {
+				delete userSocketMap[userId];
+				// io.emit() is used to send events to all the connected clients
+				io.emit("getOnlineUsers", Object.keys(userSocketMap));
+			}
 		});
 	});
 
+	return io;
+};
+
+export const getIo = () => {
+	if (!io) {
+		throw new Error("Socket.io not initialized!");
+	}
 	return io;
 };
