@@ -10,7 +10,7 @@ export const generateOTP = () => crypto.randomInt(100000, 999999).toString();
 // Send OTP email
 export const sendOTPEmail = async (email, otp) => {
 	try {
-		await resend.emails.send({
+		const { data, error } = await resend.emails.send({
 			from: "ZapChat <onboarding@resend.dev>", // Use Resend's default sending address
 			to: email,
 			subject: "Your Verification Code",
@@ -19,9 +19,11 @@ export const sendOTPEmail = async (email, otp) => {
       <p>This code will expire in 5 minutes.</p>
     `,
 		});
-		console.log("OTP email sent successfully to", email, "via Resend");
+		if (error) {
+			throw new Error(error.message);
+		}
 	} catch (error) {
-		console.error("Error sending OTP email via Resend:", error);
-		throw new Error("Failed to send OTP email.");
+		console.error("Error sending OTP email via Resend:", error.message);
+		throw new Error("Failed to send email");
 	}
 };
