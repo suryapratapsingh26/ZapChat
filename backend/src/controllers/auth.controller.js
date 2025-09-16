@@ -17,7 +17,7 @@ export const sendOtp = async (req, res) => {
 
 		if (existingUser?.isVerified) {
 			console.log("Email already in use and verified. Returning 400.");
-			return res.status(400).json({ error: "Email already in use" });
+			return res.status(400).json({ message: "Email is already registered. Please log in." });
 		}
 
 		// Generate OTP

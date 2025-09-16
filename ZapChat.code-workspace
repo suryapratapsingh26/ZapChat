@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "ZapChat",
+			"path": "."
+		}
+	],
+	"settings": {
+		"geminicodeassist.inlineSuggestions.enableAuto": true,
+		"geminicodeassist.enableTelemetry": false,
+		"geminicodeassist.enable": true
+	}
+}
