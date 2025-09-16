@@ -1,8 +1,18 @@
 // back/src/lib/emailService.js
-import { Resend } from "resend";
-import crypto from 'crypto';
+import nodemailer from "nodemailer";
+import crypto from "crypto";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Create a transporter for Nodemailer using Gmail SMTP with OAuth2
+const transporter = nodemailer.createTransport({
+	service: "gmail",
+	auth: {
+		type: "OAuth2",
+		user: process.env.GMAIL_USER, // Your Gmail address
+		clientId: process.env.OAUTH_CLIENT_ID, // Your Client ID
+		clientSecret: process.env.OAUTH_CLIENT_SECRET, // Your Client Secret
+		refreshToken: process.env.OAUTH_REFRESH_TOKEN, // Your Refresh Token
+	},
+});
 
 // Generate 6-digit OTP
 export const generateOTP = () => crypto.randomInt(100000, 999999).toString();
@@ -10,8 +20,8 @@ export const generateOTP = () => crypto.randomInt(100000, 999999).toString();
 // Send OTP email
 export const sendOTPEmail = async (email, otp) => {
 	try {
-		const { data, error } = await resend.emails.send({
-			from: "ZapChat <onboarding@resend.dev>", // Use Resend's default sending address
+		await transporter.sendMail({
+			from: `"ZapChat" <${process.env.GMAIL_USER}>`,
 			to: email,
 			subject: "Your Verification Code",
 			html: `
@@ -19,11 +29,9 @@ export const sendOTPEmail = async (email, otp) => {
       <p>This code will expire in 5 minutes.</p>
     `,
 		});
-		if (error) {
-			throw new Error(error.message);
-		}
+		console.log("OTP email sent successfully to", email, "via Nodemailer/Gmail");
 	} catch (error) {
-		console.error("Error sending OTP email via Resend:", error.message);
-		throw new Error("Failed to send email");
+		console.error("Error sending OTP email via Nodemailer/Gmail:", error.message);
+		throw new Error("Failed to send OTP email.");
 	}
 };
