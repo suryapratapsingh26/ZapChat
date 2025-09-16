@@ -1,8 +1,8 @@
 import { generateToken } from "../lib/utils.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import cloudinary from "../lib/cloudinary.js";
-import { generateOTP, sendOTPEmail } from "../lib/emailService.js";
+import { generateOTP, sendOTPEmail } from "../lib/emailService.js"; 
+import { uploadImage } from "../lib/imageUploader.js";
 
 // Send OTP - FIXED VERSION
 export const sendOtp = async (req, res) => {
@@ -293,10 +293,9 @@ export const updateProfile = async (req, res) => {
 			return res.status(400).json({ message: "Profile pic is required" });
 		}
 
-		const uploadResponse = await cloudinary.uploader.upload(profilePic);
 		const updatedUser = await User.findByIdAndUpdate(
 			userId,
-			{ profilePic: uploadResponse.secure_url },
+			{ profilePic: await uploadImage(profilePic) },
 			{ new: true }
 		);
 
