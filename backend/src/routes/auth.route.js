@@ -3,7 +3,7 @@ import {
   checkAuth,
   login,
   logout,
-  register,
+  register, 
   resetPassword,
   sendOtp,
   sendPasswordResetOtp,
