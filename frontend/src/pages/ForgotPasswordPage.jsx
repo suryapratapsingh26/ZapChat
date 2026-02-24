@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Lock, Mail, Zap } from "lucide-react";
 import toast from "react-hot-toast";
-import AuthImagePattern from "../components/AuthImagePattern";
 
 const ForgotPasswordPage = () => {
 	const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Reset Password
@@ -32,7 +31,7 @@ const ForgotPasswordPage = () => {
 				const error = await res.json();
 				toast.error(error.error || "Failed to send OTP");
 			}
-		} catch (err) {
+		} catch {
 			toast.error("An error occurred. Please try again.");
 		} finally {
 			setIsLoading(false);
@@ -58,7 +57,7 @@ const ForgotPasswordPage = () => {
 				const error = await res.json();
 				toast.error(error.error || "Invalid OTP");
 			}
-		} catch (err) {
+		} catch {
 			toast.error("Verification failed. Please try again.");
 		} finally {
 			setIsLoading(false);
@@ -84,7 +83,7 @@ const ForgotPasswordPage = () => {
 				const error = await res.json();
 				toast.error(error.error || "Failed to reset password");
 			}
-		} catch (err) {
+		} catch {
 			toast.error("An error occurred. Please try again.");
 		} finally {
 			setIsLoading(false);
@@ -96,40 +95,63 @@ const ForgotPasswordPage = () => {
 		if (step === 2) return "Verify OTP";
 		return "Reset Password";
 	};
+	const getSubtitle = () => {
+		if (step === 1) return "We’ll send a code to your email";
+		if (step === 2) return `Enter the 6-digit code sent to ${email}`;
+		return "Set a new password for your account";
+	};
 
 	return (
-		<div className='min-h-screen grid lg:grid-cols-2'>
-			<div className='flex flex-col justify-center items-center p-6 sm:p-12'>
-				<div className='w-full max-w-md space-y-8'>
-					<div className='text-center mb-8'>
-						<div className='flex flex-col items-center gap-2 group'>
-							<div className='size-12 rounded-xl bg-primary/10 flex items-center justify-center'>
-								<Zap className='size-6 text-primary' />
-							</div>
-							<h1 className='text-2xl font-bold mt-2'>{getTitle()}</h1>
+		<div className='min-h-screen flex justify-center items-center p-4'>
+			<div className='w-full max-w-md space-y-8'>
+				<div className='text-center mb-8'>
+					<div className='flex flex-col items-center gap-2 group'>
+						<div className='size-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors'>
+							<Zap className='size-6 text-primary' />
 						</div>
+						<h1 className='text-2xl font-bold mt-2'>{getTitle()}</h1>
+						<p className='text-base-content/60'>{getSubtitle()}</p>
 					</div>
+				</div>
 
-					{step === 1 && (
-						<form onSubmit={handleSendOtp} className='space-y-6'>
+				{step === 1 && (
+					<form onSubmit={handleSendOtp} className='space-y-6'>
+						<div className='form-control'>
+							<label className='label'>
+								<span className='label-text font-medium'>Email</span>
+							</label>
 							<div className='relative'>
-								<Mail className='absolute left-3 top-1/2 -translate-y-1/2 size-5 text-base-content/40' />
+								<div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+									<Mail className='size-5 text-base-content/40' />
+								</div>
 								<input
 									type='email'
 									className='input input-bordered w-full pl-10'
-									placeholder='Enter your email'
+									placeholder='you@example.com'
 									value={email}
 									onChange={(e) => setEmail(e.target.value)}
 								/>
 							</div>
-							<button type='submit' className='btn btn-primary w-full' disabled={isLoading}>
-								{isLoading ? <Loader2 className='size-5 animate-spin' /> : "Send OTP"}
-							</button>
-						</form>
-					)}
+						</div>
+						<button type='submit' className='btn btn-primary w-full' disabled={isLoading}>
+							{isLoading ? (
+								<>
+									<Loader2 className='size-5 animate-spin' />
+									Sending OTP...
+								</>
+							) : (
+								"Send OTP"
+							)}
+						</button>
+					</form>
+				)}
 
-					{step === 2 && (
-						<form onSubmit={handleVerifyOtp} className='space-y-6'>
+				{step === 2 && (
+					<form onSubmit={handleVerifyOtp} className='space-y-6'>
+						<div className='form-control'>
+							<label className='label'>
+								<span className='label-text font-medium'>Verification Code</span>
+							</label>
 							<input
 								type='text'
 								className='input input-bordered w-full text-center tracking-widest'
@@ -138,20 +160,27 @@ const ForgotPasswordPage = () => {
 								value={otp}
 								onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
 							/>
-							<button type='submit' className='btn btn-primary w-full' disabled={isLoading}>
-								{isLoading ? <Loader2 className='size-5 animate-spin' /> : "Verify OTP"}
-							</button>
-						</form>
-					)}
+						</div>
+						<button type='submit' className='btn btn-primary w-full' disabled={isLoading}>
+							{isLoading ? <Loader2 className='size-5 animate-spin' /> : "Verify OTP"}
+						</button>
+					</form>
+				)}
 
-					{step === 3 && (
-						<form onSubmit={handleResetPassword} className='space-y-6'>
+				{step === 3 && (
+					<form onSubmit={handleResetPassword} className='space-y-6'>
+						<div className='form-control'>
+							<label className='label'>
+								<span className='label-text font-medium'>New Password</span>
+							</label>
 							<div className='relative'>
-								<Lock className='absolute left-3 top-1/2 -translate-y-1/2 size-5 text-base-content/40' />
+								<div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+									<Lock className='size-5 text-base-content/40' />
+								</div>
 								<input
 									type={showPassword ? "text" : "password"}
 									className='input input-bordered w-full pl-10'
-									placeholder='Enter new password'
+									placeholder='••••••••'
 									value={newPassword}
 									onChange={(e) => setNewPassword(e.target.value)}
 								/>
@@ -167,26 +196,22 @@ const ForgotPasswordPage = () => {
 									)}
 								</button>
 							</div>
-							<button type='submit' className='btn btn-primary w-full' disabled={isLoading}>
-								{isLoading ? <Loader2 className='size-5 animate-spin' /> : "Reset Password"}
-							</button>
-						</form>
-					)}
+						</div>
+						<button type='submit' className='btn btn-primary w-full' disabled={isLoading}>
+							{isLoading ? <Loader2 className='size-5 animate-spin' /> : "Reset Password"}
+						</button>
+					</form>
+				)}
 
-					<div className='text-center'>
-						<p className='text-base-content/60'>
-							Remembered your password?{" "}
-							<Link to='/login' className='link link-primary'>
-								Login
-							</Link>
-						</p>
-					</div>
+				<div className='text-center'>
+					<p className='text-base-content/60'>
+						Remembered your password?{" "}
+						<Link to='/login' className='link link-primary'>
+							Login
+						</Link>
+					</p>
 				</div>
 			</div>
-			<AuthImagePattern
-				title={"Reset Your Password"}
-				subtitle={"Regain access to your account and continue your conversations."}
-			/>
 		</div>
 	);
 };

@@ -1,16 +1,16 @@
 // back/src/lib/emailService.js
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import dotenv from "dotenv";
 
-// Create a transporter for Nodemailer using Gmail SMTP with OAuth2
+dotenv.config();
+
+// Create a transporter for Nodemailer using Gmail SMTP with App Password
 const transporter = nodemailer.createTransport({
 	service: "gmail",
 	auth: {
-		type: "OAuth2",
-		user: process.env.GMAIL_USER, // Your Gmail address
-		clientId: process.env.OAUTH_CLIENT_ID, // Your Client ID
-		clientSecret: process.env.OAUTH_CLIENT_SECRET, // Your Client Secret
-		refreshToken: process.env.OAUTH_REFRESH_TOKEN, // Your Refresh Token
+		user: process.env.EMAIL_USER, // Your Gmail address
+		pass: process.env.EMAIL_PASS.replace(/\s+/g, ''), // Remove spaces from App Password
 	},
 });
 
@@ -21,7 +21,7 @@ export const generateOTP = () => crypto.randomInt(100000, 999999).toString();
 export const sendOTPEmail = async (email, otp) => {
 	try {
 		await transporter.sendMail({
-			from: `"ZapChat" <${process.env.GMAIL_USER}>`,
+			from: `"ZapChat" <${process.env.EMAIL_USER}>`,
 			to: email,
 			subject: "Your Verification Code",
 			html: `
@@ -29,9 +29,9 @@ export const sendOTPEmail = async (email, otp) => {
       <p>This code will expire in 5 minutes.</p>
     `,
 		});
-		console.log("OTP email sent successfully to", email, "via Nodemailer/Gmail");
+		console.log("OTP email sent successfully to", email);
 	} catch (error) {
-		console.error("Error sending OTP email via Nodemailer/Gmail:", error.message);
+		console.error("Error sending OTP email:", error.message);
 		throw new Error("Failed to send OTP email.");
 	}
 };

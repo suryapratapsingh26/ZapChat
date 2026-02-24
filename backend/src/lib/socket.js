@@ -11,7 +11,7 @@ export const getReceiverSocketId = (userId) => {
 export const initializeSocket = (server) => {
 	io = new Server(server, {
 		cors: {
-			origin: ["http://localhost:5173", "https://zap-chat-pheh.onrender.com"],
+			origin: ["http://localhost:5173", "https://zap-chat-pheh.onrender.com", "http://localhost:3000"],
 		},
 	});
 

@@ -30,7 +30,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true })); // For URL-encod
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://zap-chat-pheh.onrender.com"],
+    origin: ["http://localhost:5173", "https://zap-chat-pheh.onrender.com", "http://localhost:3000"],
     credentials: true,
   })
 );

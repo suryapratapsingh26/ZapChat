@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
+import { axiosInstance } from "../lib/axios.js";
 import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare, User } from "lucide-react";
 import { Link } from "react-router-dom";
-import AuthImagePattern from "../components/AuthImagePattern";
 import toast from "react-hot-toast";
 
 const SignUpPage = () => {
@@ -26,23 +26,15 @@ const SignUpPage = () => {
 
     setIsSendingOtp(true);
     try {
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email })
+      await axiosInstance.post("/auth/send-otp", {
+        email: formData.email,
       });
-      
-      if (res.ok) {
-        const data = await res.json();
-        setStep(2);
-        toast.success("OTP sent successfully! Check your email.");
-      } else {
-        const error = await res.json();
-        toast.error(error.message || "Failed to send OTP");
-      }
-    } catch (err) {
-      console.error("Send OTP Error:", err);
-      toast.error("Failed to send OTP. Please try again.");
+
+      setStep(2);
+      toast.success("OTP sent successfully! Check your email.");
+    } catch (error) {
+      console.error("Send OTP Error:", error);
+      toast.error(error.response?.data?.message || "Failed to send OTP");
     } finally {
       setIsSendingOtp(false);
     }
@@ -52,25 +44,18 @@ const SignUpPage = () => {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     if (otp.length !== 6) return toast.error("Enter 6-digit OTP");
-    
+
     try {
-      const res = await fetch("/api/auth/verify-otp", { // Corrected URL here
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, otp })
+      await axiosInstance.post("/auth/verify-otp", {
+        email: formData.email,
+        otp,
       });
-      
-      if (res.ok) {
-        const data = await res.json();
-        setStep(3);
-        toast.success("Email verified successfully!");
-      } else {
-        const error = await res.json();
-        toast.error(error.message || "Invalid OTP");
-      }
-    } catch (err) {
-      console.error("Verify OTP Error:", err);
-      toast.error("Verification failed. Please try again.");
+
+      setStep(3);
+      toast.success("Email verified successfully!");
+    } catch (error) {
+      console.error("Verify OTP Error:", error);
+      toast.error(error.response?.data?.message || "Invalid OTP");
     }
   };
 
@@ -85,173 +70,164 @@ const SignUpPage = () => {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left side - Form */}
-      <div className="flex flex-col justify-center items-center p-6 sm:p-12">
-        <div className="w-full max-w-md space-y-8">
-          {/* Logo/Header */}
-          <div className="text-center mb-8">
-            <div className="flex flex-col items-center gap-2 group">
-              <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <MessageSquare className="size-6 text-primary" />
-              </div>
-              <h1 className="text-2xl font-bold mt-2">
-                {step === 1 ? "Create Account" : step === 2 ? "Verify Email" : "Complete Profile"}
-              </h1>
-              <p className="text-base-content/60">
-                {step === 1 ? "Get started with your free account" : 
-                  step === 2 ? `Enter code sent to ${formData.email}` : 
-                  "Set your password"}
-              </p>
+    <div className="min-h-screen flex justify-center items-center p-4">
+      <div className="w-full max-w-md space-y-8">
+        {/* Logo/Header */}
+        <div className="text-center mb-8">
+          <div className="flex flex-col items-center gap-2 group">
+            <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+              <MessageSquare className="size-6 text-primary" />
             </div>
-          </div>
-
-          {/* Step 1: Email Input */}
-          {step === 1 && (
-            <form onSubmit={handleSendOtp} className="space-y-6">
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">Email</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="size-5 text-base-content/40" />
-                  </div>
-                  <input
-                    type="email"
-                    className="input input-bordered w-full pl-10"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  />
-                </div>
-              </div>
-              <button type="submit" className="btn btn-primary w-full" disabled={isSendingOtp}>
-                {isSendingOtp ? (
-                  <>
-                    <Loader2 className="size-5 animate-spin" />
-                    Sending OTP...
-                  </>
-                ) : (
-                  "Send OTP"
-                )}
-              </button>
-            </form>
-          )}
-
-          {/* Step 2: OTP Verification */}
-          {step === 2 && (
-            <form onSubmit={handleVerifyOtp} className="space-y-6">
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">Verification Code</span>
-                </label>
-                <input
-                  type="text"
-                  className="input input-bordered w-full text-center tracking-widest"
-                  placeholder="123456"
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                />
-              </div>
-              <button type="submit" className="btn btn-primary w-full">
-                Verify OTP
-              </button>
-              <button
-                type="button"
-                className="btn btn-ghost w-full text-sm"
-                onClick={handleSendOtp}
-                disabled={isSendingOtp}
-              >
-                {isSendingOtp ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  "Resend OTP"
-                )}
-              </button>
-            </form>
-          )}
-
-          {/* Step 3: Complete Registration */}
-          {step === 3 && (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">Full Name</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="size-5 text-base-content/40" />
-                  </div>
-                  <input
-                    type="text"
-                    className="input input-bordered w-full pl-10"
-                    placeholder="Enter your full name"
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">Password</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="size-5 text-base-content/40" />
-                  </div>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    className="input input-bordered w-full pl-10"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="size-5 text-base-content/40" />
-                    ) : (
-                      <Eye className="size-5 text-base-content/40" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <button type="submit" className="btn btn-primary w-full" disabled={isSigningUp}>
-                {isSigningUp ? (
-                  <>
-                    <Loader2 className="size-5 animate-spin" />
-                    Creating Account...
-                  </>
-                ) : (
-                  "Complete Registration"
-                )}
-              </button>
-            </form>
-          )}
-
-          <div className="text-center">
+            <h1 className="text-2xl font-bold mt-2">
+              {step === 1 ? "Create Account" : step === 2 ? "Verify Email" : "Complete Profile"}
+            </h1>
             <p className="text-base-content/60">
-              Already have an account?{" "}
-              <Link to="/login" className="link link-primary">
-                Sign in
-              </Link>
+              {step === 1 ? "Get started with your account" : 
+                step === 2 ? `Enter code sent to ${formData.email}` : 
+                "Set your password"}
             </p>
           </div>
         </div>
-      </div>
 
-      {/* Right side - Image/Pattern */}
-      <AuthImagePattern
-        title="Join our community"
-        subtitle="Connect with friends, share moments, and stay in touch with your loved ones."
-      />
+        {/* Step 1: Email Input */}
+        {step === 1 && (
+          <form onSubmit={handleSendOtp} className="space-y-6">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-medium">Email</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="size-5 text-base-content/40" />
+                </div>
+                <input
+                  type="email"
+                  className="input input-bordered w-full pl-10"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+            </div>
+            <button type="submit" className="btn btn-primary w-full" disabled={isSendingOtp}>
+              {isSendingOtp ? (
+                <>
+                  <Loader2 className="size-5 animate-spin" />
+                  Sending OTP...
+                </>
+              ) : (
+                "Send OTP"
+              )}
+            </button>
+          </form>
+        )}
+
+        {/* Step 2: OTP Verification */}
+        {step === 2 && (
+          <form onSubmit={handleVerifyOtp} className="space-y-6">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-medium">Verification Code</span>
+              </label>
+              <input
+                type="text"
+                className="input input-bordered w-full text-center tracking-widest"
+                placeholder="123456"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+              />
+            </div>
+            <button type="submit" className="btn btn-primary w-full">
+              Verify OTP
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost w-full text-sm"
+              onClick={handleSendOtp}
+              disabled={isSendingOtp}
+            >
+              {isSendingOtp ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                "Resend OTP"
+              )}
+            </button>
+          </form>
+        )}
+
+        {/* Step 3: Complete Registration */}
+        {step === 3 && (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-medium">Full Name</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="size-5 text-base-content/40" />
+                </div>
+                <input
+                  type="text"
+                  className="input input-bordered w-full pl-10"
+                  placeholder="Enter your full name"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-medium">Password</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="size-5 text-base-content/40" />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="input input-bordered w-full pl-10"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="size-5 text-base-content/40" />
+                  ) : (
+                    <Eye className="size-5 text-base-content/40" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" className="btn btn-primary w-full" disabled={isSigningUp}>
+              {isSigningUp ? (
+                <>
+                  <Loader2 className="size-5 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                "Complete Registration"
+              )}
+            </button>
+          </form>
+        )}
+
+        <div className="text-center">
+          <p className="text-base-content/60">
+            Already have an account?{" "}
+            <Link to="/login" className="link link-primary">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
